@@ -1,0 +1,245 @@
+"""
+This project will take you through the process of implementing a simplified version of the game Wheel of Fortune. 
+
+## Some methods to be used in this project:
+
+import json
+import random
+import time
+
+LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+# 1. Repeatedly asks the user for a number between min & max (inclusive)
+
+def getNumberBetween(prompt, min, max):
+    userinp = input(prompt) # ask the first time
+
+    while True:
+        try:
+            n = int(userinp) # try casting to an integer
+            if n < min:
+                errmessage = 'Must be at least {}'.format(min)
+            elif n > max:
+                errmessage = 'Must be at most {}'.format(max)
+            else:
+                return n
+        except ValueError: # The user didn't enter a number
+            errmessage = '{} is not a number.'.format(userinp)
+
+        # If we haven't gotten a number yet, add the error message and ask again
+        userinp = input('{}\n{}'.format(errmessage, prompt))
+
+# 2. Spins the wheel of fortune wheel to give a random prize
+
+# Examples:
+#    { "type": "cash", "text": "$950", "value": 950, "prize": "A trip to Ann Arbor!" },
+#    { "type": "bankrupt", "text": "Bankrupt", "prize": false },
+#    { "type": "loseturn", "text": "Lose a turn", "prize": false }
+
+def spinWheel():
+    with open("wheel.json", 'r') as f:
+        wheel = json.loads(f.read())
+        return random.choice(wheel)
+
+# 3. Returns a category & phrase (as a tuple) to guess
+
+# Example:
+#     ("Artist & Song", "Whitney Houston's I Will Always Love You")
+
+def getRandomCategoryAndPhrase():
+    with open("phrases.json", 'r') as f:
+        phrases = json.loads(f.read())
+
+        category = random.choice(list(phrases.keys()))
+        phrase   = random.choice(phrases[category])
+        return (category, phrase.upper())
+
+# 4. Given a phrase and a list of guessed letters, returns an obscured version
+
+# Example:
+#     guessed: ['L', 'B', 'E', 'R', 'N', 'P', 'K', 'X', 'Z']
+#     phrase:  "GLACIER NATIONAL PARK"
+#     returns> "_L___ER N____N_L P_RK"
+
+def obscurePhrase(phrase, guessed):
+    rv = ''
+    for s in phrase:
+        if (s in LETTERS) and (s not in guessed):
+            rv = rv+'_'
+        else:
+            rv = rv+s
+    return rv
+
+# 5. Returns a string representing the current state of the game
+
+def showBoard(category, obscuredPhrase, guessed):
+    return """
+Category: {}
+Phrase:   {}
+Guessed:  {}""".format(category, obscuredPhrase, ', '.join(sorted(guessed)))
+
+category, phrase = getRandomCategoryAndPhrase()
+
+guessed = []
+for x in range(random.randint(10, 20)):
+    randomLetter = random.choice(LETTERS)
+    if randomLetter not in guessed:
+        guessed.append(randomLetter)
+
+## Print out formatting:
+
+print("getRandomCategoryAndPhrase()\n -> ('{}', '{}')".format(category, phrase))
+
+print("\n{}\n".format("-"*5))
+
+print("obscurePhrase('{}', [{}])\n -> {}".format(phrase, ', '.join(["'{}'".format(c) for c in guessed]), obscurePhrase(phrase, guessed)))
+
+print("\n{}\n".format("-"*5))
+
+obscured_phrase = obscurePhrase(phrase, guessed)
+print("showBoard('{}', '{}', [{}])\n -> {}".format(phrase, obscured_phrase, ','.join(["'{}'".format(c) for c in guessed]), showBoard(phrase, obscured_phrase, guessed)))
+
+print("\n{}\n".format("-"*5))
+
+num_times_to_spin = random.randint(2, 5)
+print('Spinning the wheel {} times (normally this would just be done once per turn)'.format(num_times_to_spin))
+
+for x in range(num_times_to_spin):
+    print("\n{}\n".format("-"*2))
+    print("spinWheel()")
+    print(spinWheel())
+
+
+print("\n{}\n".format("-"*5))
+
+print("In 2 seconds, will run getNumberBetween('Testing getNumberBetween(). Enter a number between 1 and 10', 1, 10)")
+
+time.sleep(2)
+
+print(getNumberBetween('Testing getNumberBetween(). Enter a number between 1 and 10', 1, 10))
+
+"""
+
+###########################################
+###########################################
+
+"""
+Part A: WOFPlayer
+
+We’re going to start by defining a class to represent a Wheel of Fortune player, called WOFPlayer. Every instance of WOFPlayer has three instance variables:
+.name: The name of the player (should be passed into the constructor)
+.prizeMoney: The amount of prize money for this player (an integer, initialized to 0)
+.prizes: The prizes this player has won so far (a list, initialized to [])
+Of these instance variables, only name should be passed into the constructor.
+
+It should also have the following methods (note: we will exclude self in our descriptions):
+.addMoney(amt): Add amt to self.prizeMoney
+.goBankrupt(): Set self.prizeMoney to 0
+.addPrize(prize): Append prize to self.prizes
+.__str__(): Returns the player’s name and prize money in the following format:
+Steve ($1800) (for a player with instance variables .name == 'Steve' and prizeMoney == 1800)
+"""
+
+
+import random
+
+VOWEL_COST = 250
+LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+VOWELS = 'AEIOU'
+
+
+# Write the WOFPlayer class definition (part A) here
+
+class WOFPlayer():
+    def __init__(self, name):
+        self.name = name
+        self.prizeMoney = 0 # Amount of prize money for this player, integer, start at 0
+        self.prizes = [] # The prizes this player has won so far, a list
+
+    #.addMoney(amt): Add amt to self.prizeMoney
+    def addMoney(self, amt):
+        self.prizeMoney += amt
+
+    #.goBankrupt(): Set self.prizeMoney to 0
+    def goBankrupt(self):
+        self.prizeMoney = 0
+
+    #.addPrize(prize): Append prize to self.prizes
+    def addPrize(self, prize):
+        self.prizes.append(prize)
+
+    #.__str__(): Returns the player’s name and prize money in the following format: Steve ($1800)
+    def __str__(self):
+        return '{} (${})'.format(self.name, self.prizeMoney)
+
+# Write the WOFHumanPlayer class definition (part B) here:
+
+class WOFHumanPlayer(WOFPlayer):
+    def __init__(self, name):
+        WOFPlayer.__init__(self, name)
+        
+    #.getMove(category, obscuredPhrase, guessed): Ask the user to enter a move (using input()) and return whatever string they entered.
+     
+    def getMove(self, category, obscuredPhrase, guessed):
+        info1 = '{} has {}'.format(self.name, self.prizeMoney)
+        info2 = "Category: {} + '\n' + Phrase:  {} + '\n' + Guessed: {}".format(category, obscuredPhrase, guessed)
+        output_info =  info1 + '\n' + '\n' + info2 + '\n' + '\n' + "Guess a letter, phrase, or type 'exit' or 'pass':"
+        return output_info
+        
+'''     
+    def getMove(self, category, obscuredPhrase, guessed):
+        #info1 = '{} has {}'.format(self.name, self.prizeMoney)
+        #info2 = "Category: {} + '\n' + Phrase:  {} + '\n' + Guessed: {}".format(category, obscuredPhrase, guessed)
+        #output_info =  info1 + '\n' + '\n' + info2 + '\n' + '\n' + "Guess a letter, phrase, or type 'exit' or 'pass':"
+        info = input() #output_info)
+        return info
+'''
+
+# Write the WOFComputerPlayer class definition (part C) here:
+
+class WOFComputerPlayer(WOFPlayer):
+    prizemoney = 0
+    SORTED_FREQUENCIES = 'ZQXJKVBPYGFWMUCLDRHSNIOATE'
+    
+    def __init__(self, name, difficulty):
+        WOFPlayer.__init__(self, name)
+        self.difficulty = difficulty
+        
+    # .smartCoinFlip(): 
+        # This method will help us decide semi-randomly whether to make a “good” or “bad” move. 
+    def smartCoinFlip(self):
+        rand_num = random.randint(1, 10)
+        if rand_num > self.difficulty:
+            return True
+        else:
+            return False
+
+    # .getPossibleLetters(guessed): This method should return a list of letters that can be guessed.
+    def getPossibleLetters(self, guessed):
+        res = []
+        if self.prizemoney >= VOWEL_COST: 
+            for l in self.SORTED_FREQUENCIES:
+                if l not in guessed:
+                    res.append(l)
+        else:
+            for l in self.SORTED_FREQUENCIES:
+                if l not in VOWELS and l not in guessed:
+                    res.append(l)
+        return res
+    
+    # .getMove(category, obscuredPhrase, guessed): Should return a valid move.
+    def getMove(self, category, obscuredPhrase, guessed): 
+        user_guess = self.getPossibleLetters(guessed)
+        coin_res = self.smartCoinFlip()
+        if len(user_guess) == 0:
+            return 'pass'
+        else:
+            if coin_res == True:
+                return user_guess[-1]#self.SORTED_FREQUENCIES[-1] #collections.Counter(self.SORTED_FREQUENCIES).most_common(1)[0]
+            elif coin_res == False:
+                return random.choice(user_guess)
+                
+
+
+
+
